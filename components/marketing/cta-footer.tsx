@@ -40,7 +40,7 @@ export function CtaFooter() {
             <Link href="#" className="hover:text-foreground">Privacy</Link>
           </nav>
           <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} Crosspost AI
+            &copy; {new Date().getFullYear()} PostBridge
           </p>
         </div>
       </footer>

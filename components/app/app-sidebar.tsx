@@ -33,7 +33,7 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex h-full flex-col gap-1 bg-sidebar p-3">
       <div className="px-2 py-3">
-        <Link href="/" aria-label="Crosspost AI home">
+        <Link href="/" aria-label="PostBridge home">
           <Logo />
         </Link>
       </div>

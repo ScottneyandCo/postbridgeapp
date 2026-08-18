@@ -45,7 +45,7 @@ export async function startSubscriptionCheckout(
         price_data: {
           currency: "usd",
           product_data: {
-            name: `Crosspost AI — ${plan.name}`,
+            name: `PostBridge — ${plan.name}`,
             description: plan.tagline,
           },
           unit_amount: amount,

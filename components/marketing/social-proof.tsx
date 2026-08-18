@@ -10,7 +10,7 @@ const STATS = [
 const QUOTES = [
   {
     quote:
-      'I used to spend Sunday nights rewriting the same post 6 times. Now I write once and Crosspost AI handles the rest. It genuinely sounds native on every app.',
+      'I used to spend Sunday nights rewriting the same post 6 times. Now I write once and PostBridge handles the rest. It genuinely sounds native on every app.',
     name: 'Maya Chen',
     role: 'Creator · 180K followers',
     avatar: '/avatars/maya.png',

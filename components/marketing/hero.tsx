@@ -34,7 +34,7 @@ export function Hero() {
           </h1>
 
           <p className="mt-5 max-w-md text-pretty text-lg leading-relaxed text-muted-foreground">
-            Write a single idea and Crosspost AI turns it into platform-perfect
+            Write a single idea and PostBridge turns it into platform-perfect
             posts for all 9 networks — then schedules them in one click. From
             $0/month.
           </p>

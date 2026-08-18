@@ -4,7 +4,7 @@ import { CtaFooter } from "@/components/marketing/cta-footer"
 import { PricingTable } from "@/components/marketing/pricing-table"
 
 export const metadata: Metadata = {
-  title: "Pricing — Crosspost AI",
+  title: "Pricing — PostBridge",
   description:
     "Simple, creator-friendly pricing. Start free, upgrade when you grow. AI-powered cross-posting to every platform.",
 }

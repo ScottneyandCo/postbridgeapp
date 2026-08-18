@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Crosspost AI — Post once, publish everywhere',
+  title: 'PostBridge — Post once, publish everywhere',
   description:
     'The AI-first social scheduler. Write one idea and get platform-perfect posts for TikTok, Instagram, X, YouTube, LinkedIn and more — then schedule them all in one click.',
   generator: 'v0.app',

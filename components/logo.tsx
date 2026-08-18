@@ -15,7 +15,7 @@ export function Logo({
       </span>
       {showText && (
         <span className="text-lg font-semibold tracking-tight text-foreground">
-          Crosspost<span className="text-primary">AI</span>
+          Post<span className="text-primary">Bridge</span>
         </span>
       )}
     </span>
