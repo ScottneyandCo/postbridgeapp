@@ -52,7 +52,8 @@ export function UserMenu({ name, email }: { name: string; email: string }) {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-11 z-50 w-56 overflow-hidden rounded-xl border border-border bg-popover p-1 shadow-lg"
+          className="absolute right-0 top-11 z-50 isolate w-56 overflow-hidden rounded-xl border border-border bg-popover p-1 text-popover-foreground opacity-100 shadow-xl ring-1 ring-foreground/5"
+          style={{ backgroundColor: "var(--popover)" }}
         >
           <div className="px-3 py-2">
             <p className="truncate text-sm font-medium text-popover-foreground">{name}</p>
