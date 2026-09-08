@@ -2,7 +2,8 @@ import { and, eq } from "drizzle-orm"
 import { db } from "@/lib/db"
 import { posts, postTargets, socialAccounts } from "@/lib/db/schema"
 import type { PostTarget, SocialAccount } from "@/lib/db/schema"
-import { postTweet, refreshTokens } from "@/lib/platforms/x"
+import { postTweet, refreshTokens, uploadMedia } from "@/lib/platforms/x"
+import { parseMedia, isVideo, type MediaItem } from "@/lib/media"
 
 /** Platforms that currently support real publishing. */
 export const PUBLISHABLE_PLATFORMS = ["x"] as const
@@ -56,7 +57,32 @@ type PublishResult = {
  * Updates each target's status and rolls the post status up to
  * published / partial / failed. Idempotent: already-published targets skip.
  */
+/**
+ * Attach a post's media to X: upload up to 4 images, or a single video.
+ * Best-effort — on failure returns [] so the post still publishes as text.
+ */
+async function uploadXMedia(accessToken: string, media: MediaItem[]): Promise<string[]> {
+  if (media.length === 0) return []
+  const video = media.find(isVideo)
+  const toUpload = video ? [video] : media.filter((m) => !isVideo(m)).slice(0, 4)
+  const ids: string[] = []
+  for (const item of toUpload) {
+    try {
+      ids.push(await uploadMedia(accessToken, item.url, item.contentType))
+    } catch (err) {
+      console.log("[v0] X media upload failed:", err instanceof Error ? err.message : err)
+    }
+  }
+  return ids
+}
+
 export async function publishPost(postId: number, userId: string): Promise<PublishResult[]> {
+  const [post] = await db
+    .select()
+    .from(posts)
+    .where(and(eq(posts.id, postId), eq(posts.userId, userId)))
+  const media = parseMedia(post?.media)
+
   const targets = await db
     .select()
     .from(postTargets)
@@ -96,7 +122,8 @@ export async function publishPost(postId: number, userId: string): Promise<Publi
 
     try {
       const accessToken = await getValidXToken(account)
-      const tweet = await postTweet(accessToken, composeText(target))
+      const mediaIds = target.platform === "x" ? await uploadXMedia(accessToken, media) : []
+      const tweet = await postTweet(accessToken, composeText(target), mediaIds)
       await db
         .update(postTargets)
         .set({

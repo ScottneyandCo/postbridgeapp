@@ -8,8 +8,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { PlatformSelector } from "./platform-selector"
 import { VariantCard, type VariantState } from "./variant-card"
+import { MediaUploader } from "./media-uploader"
 import { type PlatformId } from "@/lib/platforms"
 import { createPost, publishPostNow } from "@/app/actions/posts"
+import { type MediaItem } from "@/lib/media"
 
 const TONES = ["Punchy", "Professional", "Casual", "Bold", "Educational", "Funny"] as const
 type Tone = (typeof TONES)[number]
@@ -27,6 +29,7 @@ function variantPayload(variants: VariantState[]) {
 export function Composer() {
   const router = useRouter()
   const [idea, setIdea] = useState("")
+  const [media, setMedia] = useState<MediaItem[]>([])
   const [selected, setSelected] = useState<PlatformId[]>(INITIAL_SELECTED)
   const [tone, setTone] = useState<Tone>("Punchy")
   const [loading, setLoading] = useState(false)
@@ -51,6 +54,7 @@ export function Composer() {
             ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
             : null,
         variants: variantPayload(variants),
+        media,
       })
       setSaved(true)
       router.refresh()
@@ -74,6 +78,7 @@ export function Composer() {
         status: "scheduled",
         scheduledAt: null,
         variants: variantPayload(variants),
+        media,
       })
       const results = await publishPostNow(postId)
       const published = results.filter((r) => r.status === "published")
@@ -168,6 +173,14 @@ export function Composer() {
             <div className="space-y-2">
               <Label className="text-sm font-medium">Platforms</Label>
               <PlatformSelector selected={selected} onToggle={togglePlatform} />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Media</Label>
+              <MediaUploader media={media} onChange={setMedia} />
+              <p className="text-xs text-muted-foreground">
+                Optional. Attached to every platform variant.
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -321,6 +334,7 @@ export function Composer() {
                 <VariantCard
                   key={v.platform}
                   variant={v}
+                  media={media}
                   onChange={(caption) => updateCaption(v.platform, caption)}
                   onRegenerate={() => regenerateOne(v.platform)}
                 />

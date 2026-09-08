@@ -81,6 +81,8 @@ export const posts = pgTable("posts", {
   idea: text("idea").notNull(),
   status: text("status").notNull().default("draft"),
   scheduledAt: timestamp("scheduledAt"),
+  // JSON-encoded MediaItem[] (see lib/media). Shared across all platform variants.
+  media: text("media"),
   createdAt: timestamp("createdAt").notNull().defaultNow(),
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 })

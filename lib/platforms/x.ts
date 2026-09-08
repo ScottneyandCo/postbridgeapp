@@ -9,7 +9,13 @@ const AUTHORIZE_URL = "https://x.com/i/oauth2/authorize"
 const TOKEN_URL = "https://api.x.com/2/oauth2/token"
 const API_BASE = "https://api.x.com/2"
 
-export const X_SCOPES = ["tweet.read", "tweet.write", "users.read", "offline.access"]
+export const X_SCOPES = [
+  "tweet.read",
+  "tweet.write",
+  "users.read",
+  "media.write",
+  "offline.access",
+]
 
 export function xConfigured(): boolean {
   return Boolean(process.env.X_CLIENT_ID && process.env.X_CLIENT_SECRET)
@@ -147,15 +153,59 @@ export async function getMe(accessToken: string): Promise<XUser> {
 
 export type PostedTweet = { id: string; url: string }
 
-/** Publish a text tweet. Returns the tweet id + canonical URL. */
-export async function postTweet(accessToken: string, text: string): Promise<PostedTweet> {
+/**
+ * Upload a single media file to X and return its media id. Uses the OAuth 2.0
+ * user-context v2 media upload endpoint (requires the `media.write` scope).
+ * The source is a public URL (e.g. a Vercel Blob), which we stream to X.
+ */
+export async function uploadMedia(
+  accessToken: string,
+  url: string,
+  contentType: string,
+): Promise<string> {
+  const fileRes = await fetch(url)
+  if (!fileRes.ok) throw new Error(`fetch media failed (${fileRes.status})`)
+  const bytes = await fileRes.blob()
+
+  const form = new FormData()
+  form.append("media", bytes)
+  form.append("media_category", contentType.startsWith("video/") ? "tweet_video" : "tweet_image")
+
+  const res = await fetch(`${API_BASE}/media/upload`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: form,
+  })
+  if (!res.ok) {
+    const body = await res.text()
+    throw new Error(`X media upload failed (${res.status}): ${body}`)
+  }
+  const { data } = await res.json()
+  const id = data?.id ?? data?.media_id_string ?? data?.media_key
+  if (!id) throw new Error("X media upload returned no id")
+  return String(id)
+}
+
+/**
+ * Publish a tweet. Returns the tweet id + canonical URL. Pass `mediaIds` to
+ * attach previously-uploaded media (up to 4 images or 1 video).
+ */
+export async function postTweet(
+  accessToken: string,
+  text: string,
+  mediaIds?: string[],
+): Promise<PostedTweet> {
+  const payload: { text: string; media?: { media_ids: string[] } } = { text }
+  if (mediaIds && mediaIds.length > 0) {
+    payload.media = { media_ids: mediaIds }
+  }
   const res = await fetch(`${API_BASE}/tweets`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify(payload),
   })
   if (!res.ok) {
     const body = await res.text()

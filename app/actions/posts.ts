@@ -7,6 +7,7 @@ import { and, desc, eq, inArray } from "drizzle-orm"
 import { headers } from "next/headers"
 import { revalidatePath } from "next/cache"
 import { publishPost } from "@/lib/publish"
+import { serializeMedia, type MediaItem } from "@/lib/media"
 
 async function getUserId() {
   const session = await auth.api.getSession({ headers: await headers() })
@@ -25,6 +26,7 @@ export async function createPost(input: {
   status?: "draft" | "scheduled"
   scheduledAt?: string | null
   variants: NewVariant[]
+  media?: MediaItem[]
 }) {
   const userId = await getUserId()
 
@@ -35,6 +37,7 @@ export async function createPost(input: {
       idea: input.idea,
       status: input.status ?? "draft",
       scheduledAt: input.scheduledAt ? new Date(input.scheduledAt) : null,
+      media: serializeMedia(input.media ?? []),
     })
     .returning()
 

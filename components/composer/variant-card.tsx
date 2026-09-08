@@ -6,6 +6,8 @@ import { PLATFORMS, type PlatformId } from '@/lib/platforms'
 import { PlatformBadge } from '@/components/platform-badge'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
+import { type MediaItem, isVideo } from '@/lib/media'
+import { Film } from 'lucide-react'
 
 export type VariantState = {
   platform: PlatformId
@@ -16,10 +18,12 @@ export type VariantState = {
 
 export function VariantCard({
   variant,
+  media = [],
   onChange,
   onRegenerate,
 }: {
   variant: VariantState
+  media?: MediaItem[]
   onChange: (caption: string) => void
   onRegenerate: () => void
 }) {
@@ -100,6 +104,28 @@ export function VariantCard({
                   >
                     #{h}
                   </span>
+                ))}
+              </div>
+            )}
+            {media.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {media.map((item) => (
+                  <div
+                    key={item.url}
+                    className="relative size-16 overflow-hidden rounded-lg border bg-muted"
+                  >
+                    {isVideo(item) ? (
+                      <div className="flex size-full items-center justify-center bg-secondary">
+                        <Film className="size-4 text-muted-foreground" />
+                      </div>
+                    ) : (
+                      <img
+                        src={item.url || "/placeholder.svg"}
+                        alt={item.name}
+                        className="size-full object-cover"
+                      />
+                    )}
+                  </div>
                 ))}
               </div>
             )}
