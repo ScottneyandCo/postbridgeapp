@@ -23,9 +23,11 @@ export type ConnectedAccount = {
 export function AccountsManager({
   initial,
   xEnabled,
+  linkedinEnabled,
 }: {
   initial: ConnectedAccount[]
   xEnabled: boolean
+  linkedinEnabled: boolean
 }) {
   const [pending, startTransition] = useTransition()
   const [draft, setDraft] = useState<PlatformId | null>(null)
@@ -170,6 +172,13 @@ export function AccountsManager({
                   ) : p.id === "x" && xEnabled ? (
                     <Button size="sm" className="gap-1.5" asChild>
                       <a href="/api/connect/x/start">
+                        <Zap className="size-3.5" />
+                        Connect live
+                      </a>
+                    </Button>
+                  ) : p.id === "linkedin" && linkedinEnabled ? (
+                    <Button size="sm" className="gap-1.5" asChild>
+                      <a href="/api/connect/linkedin/start">
                         <Zap className="size-3.5" />
                         Connect live
                       </a>

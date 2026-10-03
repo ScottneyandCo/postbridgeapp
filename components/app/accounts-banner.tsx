@@ -12,7 +12,15 @@ const ERROR_MESSAGES: Record<string, string> = {
   x_invalid: "The X connection request was invalid or expired. Please try again.",
   x_state: "The X connection couldn't be verified (state mismatch). Please try again.",
   x_exchange: "We couldn't complete the X connection. Please try again.",
+  linkedin_not_configured:
+    "LinkedIn isn't configured yet. Add your LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET to enable real posting.",
+  linkedin_denied: "The LinkedIn authorization was cancelled.",
+  linkedin_invalid: "The LinkedIn connection request was invalid or expired. Please try again.",
+  linkedin_state: "The LinkedIn connection couldn't be verified (state mismatch). Please try again.",
+  linkedin_exchange: "We couldn't complete the LinkedIn connection. Please try again.",
 }
+
+const PLATFORM_NAMES: Record<string, string> = { x: "X", linkedin: "LinkedIn", bluesky: "Bluesky" }
 
 export function AccountsBanner({
   connected,
@@ -37,7 +45,7 @@ export function AccountsBanner({
 
   const isSuccess = Boolean(connected)
   const message = isSuccess
-    ? `Your ${connected === "x" ? "X" : connected} account is connected and ready to publish.`
+    ? `Your ${PLATFORM_NAMES[connected ?? ""] ?? connected} account is connected and ready to publish.`
     : (ERROR_MESSAGES[error ?? ""] ?? "Something went wrong connecting your account.")
 
   return (

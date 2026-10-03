@@ -4,9 +4,35 @@ import { posts, postTargets, socialAccounts } from "@/lib/db/schema"
 import type { PostTarget, SocialAccount } from "@/lib/db/schema"
 import { postTweet, refreshTokens } from "@/lib/platforms/x"
 import { createPost as createBlueskyPost, refreshSession } from "@/lib/platforms/bluesky"
+import {
+  createPost as createLinkedInPost,
+  refreshTokens as refreshLinkedInTokens,
+} from "@/lib/platforms/linkedin"
 
 /** Platforms that currently support real publishing. */
-export const PUBLISHABLE_PLATFORMS = ["x", "bluesky"] as const
+export const PUBLISHABLE_PLATFORMS = ["x", "bluesky", "linkedin"] as const
+
+/** LinkedIn tokens last ~60 days; most apps get no refresh token, so expiry means reconnect. */
+async function getValidLinkedInToken(account: SocialAccount): Promise<string> {
+  const expiresSoon =
+    !account.tokenExpiresAt || account.tokenExpiresAt.getTime() - Date.now() < 60_000
+  if (!expiresSoon && account.accessToken) return account.accessToken
+
+  if (!account.refreshToken) {
+    throw new Error("LinkedIn access expired; reconnect required")
+  }
+  const tokens = await refreshLinkedInTokens(account.refreshToken)
+  await db
+    .update(socialAccounts)
+    .set({
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      tokenExpiresAt: tokens.expiresAt,
+      scope: tokens.scope,
+    })
+    .where(eq(socialAccounts.id, account.id))
+  return tokens.accessToken
+}
 
 /** Combine a target's caption + hashtags into the text to publish. */
 export function composeText(target: Pick<PostTarget, "caption" | "hashtags">): string {
@@ -78,6 +104,12 @@ async function publishToAccount(
         did: account.platformUserId!,
         handle: account.handle,
         accessJwt: await getValidBlueskyToken(account),
+        text,
+      })
+    case "linkedin":
+      return createLinkedInPost({
+        accessToken: await getValidLinkedInToken(account),
+        personId: account.platformUserId!,
         text,
       })
     default:

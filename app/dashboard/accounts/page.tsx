@@ -1,6 +1,7 @@
 import { AccountsManager } from "@/components/app/accounts-manager"
 import { getAccounts } from "@/app/actions/accounts"
 import { xConfigured } from "@/lib/platforms/x"
+import { linkedinConfigured } from "@/lib/platforms/linkedin"
 import { AccountsBanner } from "@/components/app/accounts-banner"
 
 export default async function AccountsPage({
@@ -27,7 +28,11 @@ export default async function AccountsPage({
         </p>
       </div>
       <AccountsBanner connected={params.connected} error={params.error} />
-      <AccountsManager initial={initial} xEnabled={xConfigured()} />
+      <AccountsManager
+        initial={initial}
+        xEnabled={xConfigured()}
+        linkedinEnabled={linkedinConfigured()}
+      />
     </div>
   )
 }
