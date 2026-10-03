@@ -9,6 +9,7 @@ import { PLATFORM_LIST, type PlatformId } from "@/lib/platforms"
 import { formatCompact } from "@/lib/format"
 import { connectAccount, disconnectAccount } from "@/app/actions/accounts"
 import { cn } from "@/lib/utils"
+import { BlueskyConnectForm } from "@/components/app/bluesky-connect-form"
 
 export type ConnectedAccount = {
   id: number
@@ -109,7 +110,9 @@ export function AccountsManager({
                 </p>
               </div>
 
-              {isDrafting ? (
+              {isDrafting && p.id === "bluesky" ? (
+                <BlueskyConnectForm onDone={() => setDraft(null)} />
+              ) : isDrafting ? (
                 <div className="mt-3 border-t pt-3">
                   <div className="flex items-center gap-2">
                     <Input
@@ -180,8 +183,17 @@ export function AccountsManager({
                         setHandle("")
                       }}
                     >
-                      <Plus className="size-3.5" />
-                      Connect
+                      {p.id === "bluesky" ? (
+                        <>
+                          <Zap className="size-3.5" />
+                          Connect live
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="size-3.5" />
+                          Connect
+                        </>
+                      )}
                     </Button>
                   )}
                 </div>

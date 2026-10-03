@@ -3,9 +3,10 @@ import { db } from "@/lib/db"
 import { posts, postTargets, socialAccounts } from "@/lib/db/schema"
 import type { PostTarget, SocialAccount } from "@/lib/db/schema"
 import { postTweet, refreshTokens } from "@/lib/platforms/x"
+import { createPost as createBlueskyPost, refreshSession } from "@/lib/platforms/bluesky"
 
 /** Platforms that currently support real publishing. */
-export const PUBLISHABLE_PLATFORMS = ["x"] as const
+export const PUBLISHABLE_PLATFORMS = ["x", "bluesky"] as const
 
 /** Combine a target's caption + hashtags into the text to publish. */
 export function composeText(target: Pick<PostTarget, "caption" | "hashtags">): string {
@@ -41,6 +42,47 @@ async function getValidXToken(account: SocialAccount): Promise<string> {
     .where(eq(socialAccounts.id, account.id))
 
   return tokens.accessToken
+}
+
+/** Return a valid Bluesky access JWT, refreshing (and persisting the rotated refresh JWT) if needed. */
+async function getValidBlueskyToken(account: SocialAccount): Promise<string> {
+  const expiresSoon =
+    !account.tokenExpiresAt || account.tokenExpiresAt.getTime() - Date.now() < 60_000
+  if (!expiresSoon && account.accessToken) return account.accessToken
+
+  if (!account.refreshToken || !account.platformUserId) {
+    throw new Error("Bluesky session missing; reconnect required")
+  }
+  const session = await refreshSession(account.platformUserId, account.refreshToken)
+  await db
+    .update(socialAccounts)
+    .set({
+      accessToken: session.accessJwt,
+      refreshToken: session.refreshJwt,
+      tokenExpiresAt: session.accessExpiresAt,
+      handle: session.handle,
+    })
+    .where(eq(socialAccounts.id, account.id))
+  return session.accessJwt
+}
+
+async function publishToAccount(
+  account: SocialAccount,
+  text: string,
+): Promise<{ id: string; url: string }> {
+  switch (account.platform) {
+    case "x":
+      return postTweet(await getValidXToken(account), text)
+    case "bluesky":
+      return createBlueskyPost({
+        did: account.platformUserId!,
+        handle: account.handle,
+        accessJwt: await getValidBlueskyToken(account),
+        text,
+      })
+    default:
+      throw new Error(`Publishing to ${account.platform} is not supported yet`)
+  }
 }
 
 type PublishResult = {
@@ -95,8 +137,7 @@ export async function publishPost(postId: number, userId: string): Promise<Publi
     }
 
     try {
-      const accessToken = await getValidXToken(account)
-      const tweet = await postTweet(accessToken, composeText(target))
+      const tweet = await publishToAccount(account, composeText(target))
       await db
         .update(postTargets)
         .set({
